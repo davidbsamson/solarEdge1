@@ -1,0 +1,10 @@
+version = 0.1
+[default]
+[default.deploy]
+[default.deploy.parameters]
+stack_name = "solarEdge1"
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-1gozld8oicevf"
+s3_prefix = "solarEdge1"
+region = "eu-west-1"
+capabilities = "CAPABILITY_IAM"
+confirm_changeset = true
