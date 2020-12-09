@@ -29,10 +29,10 @@ Outputs:
   # Find out more about other implicit resources you can reference within SAM
   # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
   solarEdge1Api:
-    Description: "API Gateway endpoint URL for Prod stage for Hello World function"
+    Description: "API Gateway endpoint URL for Prod stage for SolarEdge Monitoring function"
     Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/hello/"
   solarEdge1Function:
-    Description: "Hello World Lambda Function ARN"
+    Description: "SolarEdge Monitoring Lambda Function ARN"
     Value: !GetAtt solarEdge1Function.Arn
   solarEdge1FunctionIamRole:
     Description: "Implicit IAM Role created for Hello World function"

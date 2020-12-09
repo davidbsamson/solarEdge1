@@ -20,7 +20,7 @@ def get_secrets():
 
     try:
         get_secret_value_response = client.get_secret_value(SecretId=secret_name)
-        print("get_secret_value_response=",get_secret_value_response)
+        # print("get_secret_value_response=",get_secret_value_response)
     except ClientError as e:
         if e.response['Error']['Code'] == 'ResourceNotFoundException':
             print("The requested secret " + secret_name + " was not found")
@@ -39,8 +39,7 @@ def get_secrets():
             decoded_binary_secret = base64.b64decode(get_secret_value_response['SecretBinary'])
 
     pws = eval(get_secret_value_response['SecretString'])
-    # print(pws)
-    print (datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S %Z"), pws["solarEdge"],pws["emailPW"])
+    print (datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S %Z"), " Successfully exiting get_secrets")
     return (pws["solarEdge"],pws["emailPW"])
 
 def initializeAPI(api_key):
@@ -49,17 +48,37 @@ def initializeAPI(api_key):
     print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S %Z"), "After initialization")
     return api
 
+def convert_datetime_timezone(dt, tz1, tz2):
+    import pytz
+
+    tz1 = pytz.timezone(tz1)
+    tz2 = pytz.timezone(tz2)
+
+    dt = datetime.datetime.strptime(dt,"%Y-%m-%d %H:%M:%S")
+    dt = tz1.localize(dt)
+    dt = dt.astimezone(tz2)
+    dt = dt.strftime("%Y-%m-%d %H:%M:%S")
+
+    return dt
+
 def minsSinceLastUpdate(connectionKey, site_key):
+    import pytz
     """
     Returns an integer indicating the number of minutes since the SolarEdge equipment reported back
     to SolarEdge's servers
 
     returns number of minutes since last update
     """
+    timezone = pytz.timezone("Israel")
     get_overview_resp = connectionKey.get_overview(site_key)
     latest = get_overview_resp['overview']['lastUpdateTime']
-    print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S %Z"), "Latest=",latest)
-    return ((datetime.datetime.now()  -datetime.datetime.strptime(latest,"%Y-%m-%d %H:%M:%S")).seconds)/60
+    latest_callback_as_UTC = datetime.datetime.strptime(convert_datetime_timezone(latest, "Etc/GMT-2", "UTC"),"%Y-%m-%d %H:%M:%S")
+    print(timezone.localize(datetime.datetime.now()).strftime("%Y-%m-%d %H:%M:%S"), "Latest reportback=",latest," "
+            "(as UTC: ",latest_callback_as_UTC.strftime("%Y-%m-%d %H:%M:%S %Z"),")")
+    current_time = datetime.datetime.now()
+    print(timezone.localize(datetime.datetime.now()).strftime("%Y-%m-%d %H:%M:%S"), "Current time=", current_time.strftime("%Y-%m-%d %H:%M:%S %Z"))
+    diff_in_mins = (current_time - latest_callback_as_UTC).seconds /60
+    return diff_in_mins
 
 def sendEmail (sender, pw,  addressee, subject, body):
     import smtplib
@@ -77,7 +96,7 @@ def sendEmail (sender, pw,  addressee, subject, body):
         server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
         server.login(sender, pw)
         server.send_message(msg)
-        print (datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S %Z"), ": mail sent")
+        print (datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "mail sent")
         server.quit()
     except:
         print ('Something went wrong...')
@@ -87,15 +106,16 @@ def lambda_handler(environ, start_response):
 # path = environ['PATH_INFO']
 # method = environ['REQUEST_METHOD']
 # Constants
-    errorThreshold = 2
+    errorThreshold = 25
+
     site_key = 25501
     (solarEdgepw, gmailPW) = get_secrets()
     connection = initializeAPI(solarEdgepw)
     interval = minsSinceLastUpdate(connection, site_key)
-    print (datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S %Z"), ": interval was ", str(round(interval,1)),
+    print (datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), ": interval was ", str(round(interval,1)),
            " minutes (Error threshold =",str(round(errorThreshold,0)),"minutes)")
     if (interval > errorThreshold):
-        print (datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S %Z"), ": sending mail")
+        print (datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "sending mail")
         sendEmail("davidsamson.efrat@gmail.com", gmailPW, addressee="davidsamson.efrat@gmail.com",
                     subject="No solar reports in " +str(round(interval,1))+ " minutes", body="Get on it")
 
