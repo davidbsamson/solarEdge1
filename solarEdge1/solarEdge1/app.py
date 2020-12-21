@@ -106,7 +106,7 @@ def lambda_handler(environ, start_response):
 # path = environ['PATH_INFO']
 # method = environ['REQUEST_METHOD']
 # Constants
-    errorThreshold = 25
+    errorThreshold = 40
 
     site_key = 25501
     (solarEdgepw, gmailPW) = get_secrets()
@@ -118,5 +118,6 @@ def lambda_handler(environ, start_response):
         print (datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "sending mail")
         sendEmail("davidsamson.efrat@gmail.com", gmailPW, addressee="davidsamson.efrat@gmail.com",
                     subject="No solar reports in " +str(round(interval,1))+ " minutes", body="Get on it")
+
 
 
