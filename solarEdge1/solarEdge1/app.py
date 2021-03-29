@@ -72,7 +72,7 @@ def minsSinceLastUpdate(connectionKey, site_key):
     timezone = pytz.timezone("Israel")
     get_overview_resp = connectionKey.get_overview(site_key)
     latest = get_overview_resp['overview']['lastUpdateTime']
-    latest_callback_as_UTC = datetime.datetime.strptime(convert_datetime_timezone(latest, "Etc/GMT-2", "UTC"),"%Y-%m-%d %H:%M:%S")
+    latest_callback_as_UTC = datetime.datetime.strptime(convert_datetime_timezone(latest, "Etc/GMT-3", "UTC"),"%Y-%m-%d %H:%M:%S")
     print(timezone.localize(datetime.datetime.now()).strftime("%Y-%m-%d %H:%M:%S"), "Latest reportback=",latest," "
             "(as UTC: ",latest_callback_as_UTC.strftime("%Y-%m-%d %H:%M:%S %Z"),")")
     current_time = datetime.datetime.now()
